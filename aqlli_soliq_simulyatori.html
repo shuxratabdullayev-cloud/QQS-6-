@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAXR MADAD KONSALT - Aqlli Soliq Simulyatori</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SOF PDF YARATUVCHI KUTUBXONALAR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <style>
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans p-2 md:p-6">
+
+    <div class="max-w-5xl mx-auto space-y-6">
+        
+        <div class="bg-blue-900 text-white p-6 rounded-xl shadow-lg text-center">
+            <h1 class="text-2xl md:text-3xl font-bold mb-2 uppercase tracking-wide">FAXR MADAD KONSALT</h1>
+            <p class="text-sm text-blue-200 uppercase tracking-widest mb-4">Buxgalteriya Maktabi</p>
+            <h2 class="text-xl md:text-2xl font-semibold text-yellow-400">🧠 Aqlli Soliq Simulyatori: 12% vs 6% (PF-100)</h2>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <div class="lg:col-span-1 space-y-4">
+                <div class="bg-white p-4 rounded-xl shadow border border-gray-200">
+                    <h3 class="text-sm font-bold text-gray-700 mb-3 border-b pb-2">Tayyor amaliy misollar:</h3>
+                    <button onclick="loadExample(1)" class="w-full mb-2 py-2 px-3 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-semibold rounded border border-blue-200 transition-colors text-left">
+                        1. O'quv markazi (B2C) - 6% foydali
+                    </button>
+                    <button onclick="loadExample(2)" class="w-full py-2 px-3 bg-red-50 hover:bg-red-100 text-red-700 text-sm font-semibold rounded border border-red-200 transition-colors text-left">
+                        2. Ulgurji (B2B + QQS minus) - Xavfli
+                    </button>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl shadow border border-gray-200">
+                    <h3 class="text-base font-bold text-gray-800 mb-4 border-b pb-2">1-QADAM: Yuridik tekshiruv (PF-100)</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Korxonaning asosiy faoliyat turi:</label>
+                            <select id="faoliyat" onchange="checkEligibility()" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                <option value="">Tanlang...</option>
+                                <option value="1">Savdo, xizmat ko'rsatish, umumiy ovqatlanish</option>
+                                <option value="2">Boshqa (Ishlab chiqarish, qurilish va h.k.)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Yirik soliq to'lovchimi / Davlat ulushi 50%< ?</label>
+                            <select id="maqom" onchange="checkEligibility()" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                <option value="">Tanlang...</option>
+                                <option value="1">Yo'q (Kichik/O'rta biznesmiz)</option>
+                                <option value="2">Ha</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="eligibilityAlert" class="mt-4 hidden text-sm p-3 rounded"></div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <div id="step2" class="bg-white p-6 rounded-xl shadow border border-gray-200 opacity-50 pointer-events-none transition-opacity duration-300 relative">
+                    <div id="step2Overlay" class="absolute inset-0 bg-gray-50 bg-opacity-50 z-10 flex items-center justify-center rounded-xl">
+                        <span class="bg-white px-4 py-2 rounded shadow text-sm font-bold text-gray-600">Oldin 1-qadamni to'ldiring</span>
+                    </div>
+
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">2-QADAM: Moliyaviy ko'rsatkichlarni kiriting</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Yillik aylanma (tushum):</label>
+                            <input type="number" id="inpAylanma" class="w-full px-3 py-2 border border-gray-300 rounded font-mono text-sm" placeholder="0">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Kiruvchi QQS (zachyot):</label>
+                            <input type="number" id="inpKiruvchi" class="w-full px-3 py-2 border border-gray-300 rounded font-mono text-sm" placeholder="0">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Sof foyda (soliqqa tortiladigan):</label>
+                            <input type="number" id="inpFoyda" class="w-full px-3 py-2 border border-gray-300 rounded font-mono text-sm" placeholder="0">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">QQS salbiy qoldig'i (Minus/Haqdorlik):</label>
+                            <input type="number" id="inpSalbiy" class="w-full px-3 py-2 border border-gray-300 rounded font-mono text-sm" value="0">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Foyda solig'i stavkasi (%):</label>
+                            <input type="number" id="inpStavka" class="w-full px-3 py-2 border border-gray-300 rounded font-mono text-sm" value="15">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">B2B mijozlar ulushi (0-100%):</label>
+                            <input type="number" id="inpB2B" class="w-full px-3 py-2 border border-gray-300 rounded font-mono text-sm" value="0">
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <button onclick="calculate()" class="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow transition-colors">
+                            📊 Ekranda ko'rish
+                        </button>
+                        <!-- YAKKAYU YAGONA TO'G'RIDAN TO'G'RI PDF YUKLOVCHI TUGMA -->
+                        <button onclick="generateDirectPDF()" class="flex-1 py-3 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-lg shadow-lg transition-colors flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                            </svg>
+                            Fayl: PDF yuklash
+                        </button>
+                    </div>
+                    <p id="errorMsg" class="text-red-500 text-sm mt-2 text-center hidden">Barcha maydonlarni to'g'ri to'ldiring!</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="reportSection" class="hidden bg-white p-6 md:p-8 rounded-xl shadow-2xl border border-gray-300 mt-6">
+            <div id="reportContent"></div>
+        </div>
+    </div>
+
+    <script>
+        function formatSum(amount) {
+            return amount.toLocaleString('ru-RU') + " so'm";
+        }
+
+        function getValues() {
+            return {
+                aylanma: parseFloat(document.getElementById('inpAylanma').value) || 0,
+                kiruvchi: parseFloat(document.getElementById('inpKiruvchi').value) || 0,
+                foyda: parseFloat(document.getElementById('inpFoyda').value) || 0,
+                salbiy: parseFloat(document.getElementById('inpSalbiy').value) || 0,
+                stavka: parseFloat(document.getElementById('inpStavka').value) || 0,
+                b2b: parseFloat(document.getElementById('inpB2B').value) || 0,
+                isValid: parseFloat(document.getElementById('inpAylanma').value) > 0
+            };
+        }
+
+        function checkEligibility() {
+            const faoliyat = document.getElementById('faoliyat').value;
+            const maqom = document.getElementById('maqom').value;
+            const alertBox = document.getElementById('eligibilityAlert');
+            const step2 = document.getElementById('step2');
+            const overlay = document.getElementById('step2Overlay');
+
+            alertBox.className = "mt-4 p-3 rounded text-sm font-bold hidden";
+
+            if (faoliyat === '2' || maqom === '2') {
+                alertBox.innerHTML = "❌ QONUNIY CHEKLOV: PF-100 Farmoniga asosan, sizning korxonangiz 6% ga o'tish huquqiga ega emas!";
+                alertBox.classList.add('bg-red-100', 'text-red-700', 'border', 'border-red-300', 'block');
+                alertBox.classList.remove('hidden');
+                
+                step2.classList.add('opacity-50', 'pointer-events-none');
+                overlay.classList.remove('hidden');
+                document.getElementById('reportSection').classList.add('hidden');
+                return false;
+            } else if (faoliyat === '1' && maqom === '1') {
+                alertBox.innerHTML = "✅ HUQUQIY TEKSHIRUV: Korxonangiz 6% lik rejimga o'tish huquqiga ega.";
+                alertBox.classList.add('bg-green-100', 'text-green-800', 'border', 'border-green-300', 'block');
+                alertBox.classList.remove('hidden');
+
+                step2.classList.remove('opacity-50', 'pointer-events-none');
+                overlay.classList.add('hidden');
+                return true;
+            } else {
+                step2.classList.add('opacity-50', 'pointer-events-none');
+                overlay.classList.remove('hidden');
+                return false;
+            }
+        }
+
+        function loadExample(type) {
+            document.getElementById('faoliyat').value = '1';
+            document.getElementById('maqom').value = '1';
+            checkEligibility();
+
+            if (type === 1) {
+                document.getElementById('inpAylanma').value = 2000000000;
+                document.getElementById('inpKiruvchi').value = 30000000;
+                document.getElementById('inpFoyda').value = 1200000000;
+                document.getElementById('inpSalbiy').value = 0;
+                document.getElementById('inpStavka').value = 15;
+                document.getElementById('inpB2B').value = 10;
+                calculate();
+            } else if (type === 2) {
+                document.getElementById('inpAylanma').value = 5000000000;
+                document.getElementById('inpKiruvchi').value = 500000000;
+                document.getElementById('inpFoyda').value = 300000000;
+                document.getElementById('inpSalbiy').value = 150000000;
+                document.getElementById('inpStavka').value = 15;
+                document.getElementById('inpB2B').value = 85;
+                calculate();
+            }
+        }
+
+        // EKRANDA KO'RISH UCHUN HTML GENERATSIYASI
+        function calculate() {
+            if (!checkEligibility()) return;
+            const vals = getValues();
+
+            if (!vals.isValid) {
+                document.getElementById('errorMsg').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('errorMsg').classList.add('hidden');
+
+            let hisoblangan_qqs_12 = vals.aylanma * 0.12;
+            let tolanadigan_qqs_12 = Math.max(0, hisoblangan_qqs_12 - vals.kiruvchi);
+            let foyda_soligi = vals.foyda * (vals.stavka / 100);
+            let standart_jami = tolanadigan_qqs_12 + foyda_soligi;
+
+            let soddalashtirilgan_jami = (vals.aylanma * 0.06);
+            let zararMatni = "";
+            if (vals.salbiy > 0) {
+                zararMatni = `<div class="mt-2 pt-2 border-t border-red-200 text-red-600 font-bold text-xs">⚠️ DIQQAT: 6% ga o'tish orqali ${formatSum(vals.salbiy)} QQS minusingiz KUYIB KETADI!</div>`;
+                soddalashtirilgan_jami += vals.salbiy;
+            }
+
+            let farq = standart_jami - soddalashtirilgan_jami;
+            let xulosaHtml = farq > 0 
+                ? `<div class="bg-green-50 border border-green-400 p-4 rounded mb-4"><h4 class="font-bold text-green-800">✅ QAROR: 6% LIK TIZIMGA O'TISH FOYDALI!</h4><p class="text-green-700 text-sm">Siz MOLIYAVIY jihatdan <b>${formatSum(farq)}</b> foyda qilasiz.</p></div>`
+                : `<div class="bg-red-50 border border-red-400 p-4 rounded mb-4"><h4 class="font-bold text-red-800">❌ QAROR: O'TMANG! STANDART TIZIMDA QOLING!</h4><p class="text-red-700 text-sm">6% ga o'tish sizga foyda bermaydi, aksincha <b>${formatSum(Math.abs(farq))}</b> ZARAR qilasiz.</p></div>`;
+
+            let b2bHtml = (farq > 0 && vals.b2b > 40) 
+                ? `<div class="bg-orange-50 border border-orange-400 p-4 rounded mb-4"><h4 class="font-bold text-orange-800">🚨 BOZOR XAVFI (MARKETING RISK):</h4><p class="text-orange-700 text-sm">Sizda yuridik mijozlar (B2B) ulushi <b>${vals.b2b}%</b> ni tashkil etadi. 6% ga o'tsangiz, mijozlaringiz faqat 6% zachyot oladi. Ular 12% da qolgan yetkazib beruvchiga ketib qolish xavfi mavjud!</p></div>` 
+                : "";
+
+            let htmlReport = `
+                <h2 class="text-xl font-bold text-center border-b-2 border-gray-800 pb-2 mb-4">RAHBARIYAT UCHUN MA'LUMOTNOMA</h2>
+                <div class="mb-6">
+                    <h3 class="font-bold text-gray-800 bg-gray-100 p-2 rounded mb-2">📌 Boshlang'ich ma'lumotlar:</h3>
+                    <div class="grid grid-cols-2 text-sm border-b pb-1"><span class="text-gray-600">Yillik aylanma:</span><span class="text-right font-bold">${formatSum(vals.aylanma)}</span></div>
+                    <div class="grid grid-cols-2 text-sm border-b py-1"><span class="text-gray-600">Kiruvchi QQS (zachyot):</span><span class="text-right font-bold">${formatSum(vals.kiruvchi)}</span></div>
+                    <div class="grid grid-cols-2 text-sm border-b py-1"><span class="text-gray-600">Sof foyda:</span><span class="text-right font-bold">${formatSum(vals.foyda)}</span></div>
+                    <div class="grid grid-cols-2 text-sm border-b py-1"><span class="text-gray-600">QQS haqdorlik (minus):</span><span class="text-right font-bold">${formatSum(vals.salbiy)}</span></div>
+                    <div class="grid grid-cols-2 text-sm border-b py-1"><span class="text-gray-600">Yuridik mijozlar (B2B):</span><span class="text-right font-bold">${vals.b2b}%</span></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="border-2 border-gray-200 p-4 bg-gray-50 rounded">
+                        <h4 class="font-bold text-center border-b pb-2 mb-2 text-sm">1️⃣ STANDART TARTIB (12%)</h4>
+                        <div class="flex justify-between text-sm mb-1"><span>To'lanadigan QQS:</span><span class="font-bold">${formatSum(tolanadigan_qqs_12)}</span></div>
+                        <div class="flex justify-between text-sm mb-3"><span>Foyda solig'i:</span><span class="font-bold">${formatSum(foyda_soligi)}</span></div>
+                        <div class="flex justify-between font-black text-base border-t pt-2"><span>JAMI SOLIQ:</span><span>${formatSum(standart_jami)}</span></div>
+                    </div>
+                    <div class="border-2 border-gray-200 p-4 bg-gray-50 rounded">
+                        <h4 class="font-bold text-center border-b pb-2 mb-2 text-sm">2️⃣ SODDALASHTIRILGAN (6%)</h4>
+                        <div class="flex justify-between text-sm mb-1"><span>To'lanadigan QQS:</span><span class="font-bold">${formatSum(vals.aylanma * 0.06)}</span></div>
+                        <div class="flex justify-between text-sm mb-3"><span>Foyda solig'i:</span><span class="font-bold">0 so'm</span></div>
+                        <div class="flex justify-between font-black text-base border-t pt-2"><span>JAMI SOLIQ:</span><span>${formatSum(soddalashtirilgan_jami)}</span></div>
+                        ${zararMatni}
+                    </div>
+                </div>
+                ${xulosaHtml} ${b2bHtml}
+            `;
+            
+            document.getElementById('reportContent').innerHTML = htmlReport;
+            const reportSec = document.getElementById('reportSection');
+            reportSec.classList.remove('hidden');
+            reportSec.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // TUGMA BOSILGANDA BEVOSITA PDF FAYL YARATISH VA YUKLASH (PDFMAKE ORQALI)
+        function generateDirectPDF() {
+            if (!checkEligibility()) return;
+            const vals = getValues();
+            if (!vals.isValid) {
+                document.getElementById('errorMsg').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('errorMsg').classList.add('hidden');
+
+            const date = new Date().toLocaleString('ru-RU');
+            
+            let hisoblangan_qqs_12 = vals.aylanma * 0.12;
+            let tolanadigan_qqs_12 = Math.max(0, hisoblangan_qqs_12 - vals.kiruvchi);
+            let foyda_soligi = vals.foyda * (vals.stavka / 100);
+            let standart_jami = tolanadigan_qqs_12 + foyda_soligi;
+
+            let soddalashtirilgan_jami = (vals.aylanma * 0.06);
+            if (vals.salbiy > 0) soddalashtirilgan_jami += vals.salbiy;
+            
+            let farq = standart_jami - soddalashtirilgan_jami;
+
+            // PDF Hujjat tuzilishi
+            var docDefinition = {
+                content: [
+                    { text: "RAHBARIYAT UCHUN MA'LUMOTNOMA", style: 'header', alignment: 'center' },
+                    { text: "KORXONA TAHLILI | Sana: " + date, alignment: 'center', margin: [0, 0, 0, 20], color: '#555555' },
+
+                    { text: "Boshlang'ich ma'lumotlar:", style: 'subheader' },
+                    {
+                        table: {
+                            widths: ['*', '*'],
+                            body: [
+                                ['Yillik aylanma:', { text: formatSum(vals.aylanma), alignment: 'right', bold: true }],
+                                ['Kiruvchi QQS (zachyot):', { text: formatSum(vals.kiruvchi), alignment: 'right', bold: true }],
+                                ['Sof foyda:', { text: formatSum(vals.foyda), alignment: 'right', bold: true }],
+                                ['QQS haqdorlik (minus):', { text: formatSum(vals.salbiy), alignment: 'right', bold: true }],
+                                ['Yuridik mijozlar (B2B):', { text: vals.b2b + '%', alignment: 'right', bold: true }]
+                            ]
+                        },
+                        layout: 'lightHorizontalLines',
+                        margin: [0, 0, 0, 25]
+                    },
+
+                    {
+                        columns: [
+                            {
+                                width: '*',
+                                stack: [
+                                    { text: "1. STANDART TARTIB (12%)", style: 'boxHeader', alignment: 'center' },
+                                    {
+                                        table: {
+                                            widths: ['*', 'auto'],
+                                            body: [
+                                                ["To'lanadigan QQS:", { text: formatSum(tolanadigan_qqs_12), alignment: 'right' }],
+                                                ["Foyda solig'i:", { text: formatSum(foyda_soligi), alignment: 'right' }],
+                                                ["JAMI SOLIQ:", { text: formatSum(standart_jami), bold: true, fontSize: 13, alignment: 'right' }]
+                                            ]
+                                        },
+                                        layout: 'noBorders'
+                                    }
+                                ]
+                            },
+                            { width: 30, text: '' }, // bo'sh joy
+                            {
+                                width: '*',
+                                stack: [
+                                    { text: "2. SODDALASHTIRILGAN (6%)", style: 'boxHeader', alignment: 'center' },
+                                    {
+                                        table: {
+                                            widths: ['*', 'auto'],
+                                            body: [
+                                                ["To'lanadigan QQS:", { text: formatSum(vals.aylanma * 0.06), alignment: 'right' }],
+                                                ["Foyda solig'i:", { text: "0 so'm", alignment: 'right' }],
+                                                ["JAMI SOLIQ:", { text: formatSum(soddalashtirilgan_jami), bold: true, fontSize: 13, alignment: 'right' }]
+                                            ]
+                                        },
+                                        layout: 'noBorders'
+                                    },
+                                    (vals.salbiy > 0 ? { text: "DIQQAT: " + formatSum(vals.salbiy) + " minusingiz KUYADI!", color: 'red', bold: true, fontSize: 10, margin: [0,10,0,0], alignment: 'right' } : "")
+                                ]
+                            }
+                        ],
+                        margin: [0, 0, 0, 25]
+                    },
+
+                    {
+                        text: farq > 0 ? "QAROR: 6% LIK TIZIMGA O'TISH FOYDALI!" : "QAROR: O'TMANG! STANDART TIZIMDA QOLING!",
+                        style: farq > 0 ? 'successHeader' : 'dangerHeader'
+                    },
+                    {
+                        text: farq > 0 
+                            ? "Siz MOLIYAVIY jihatdan " + formatSum(farq) + " foyda qilasiz (zachyot kuyishini hisobga olganda ham)." 
+                            : "6% ga o'tish sizga foyda bermaydi, aksincha " + formatSum(Math.abs(farq)) + " ZARAR qilasiz.",
+                        margin: [0, 5, 0, 20]
+                    },
+
+                    (farq > 0 && vals.b2b > 40 ? [
+                        { text: "BOZOR XAVFI (MARKETING RISK):", style: 'warningHeader' },
+                        { text: "Sizda yuridik mijozlar (B2B) ulushi " + vals.b2b + "% ni tashkil etadi. 6% ga o'tsangiz, mijozlaringiz faqat 6% zachyot oladi. Ular 12% da qolgan yetkazib beruvchiga ketib qolish xavfi mavjud!", margin: [0, 5, 0, 20] }
+                    ] : ""),
+
+                    { text: "Tayyorladi: FAXR MADAD KONSALT ________________", alignment: 'right', margin: [0, 40, 0, 0], bold: true, fontSize: 12 }
+                ],
+                styles: {
+                    header: { fontSize: 18, bold: true, margin: [0, 0, 0, 5] },
+                    subheader: { fontSize: 14, bold: true, margin: [0, 0, 0, 10], color: '#333333' },
+                    boxHeader: { fontSize: 12, bold: true, margin: [0, 0, 0, 10] },
+                    successHeader: { fontSize: 14, bold: true, color: '#166534' },
+                    dangerHeader: { fontSize: 14, bold: true, color: '#991b1b' },
+                    warningHeader: { fontSize: 14, bold: true, color: '#9a3412' }
+                },
+                defaultStyle: {
+                    fontSize: 11
+                }
+            };
+
+            // PDF ni darhol yaratish va fayl qilib tushirish
+            pdfMake.createPdf(docDefinition).download('Rahbariyat_uchun_Qaror.pdf');
+        }
+    </script>
+</body>
+</html>
